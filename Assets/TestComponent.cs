@@ -20,6 +20,15 @@ public class TestComponent : MonoBehaviour {
             allowTestAction = true;
         if (Input.GetKeyDown(KeyCode.Alpha2))
             allowTestAction = false;
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            GetComponent<nhn_EventHandler>().Unregister(this);
+        }
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            GetComponent<nhn_EventHandler>().Register(this);
+        }
     }
 
     void OnStart_TestAction()
@@ -37,4 +46,28 @@ public class TestComponent : MonoBehaviour {
     {
         Debug.Log("OnFailStart_TestAction");
     }
+
+    bool CanStart_TestTask()
+    {
+        Debug.Log("CanStart_TestTask");
+        return true;
+    }
+
+    void OnStart_TestTask()
+    {
+        Debug.Log("OnStart_TestTask");
+    }
+
+    void OnStop_TestTask()
+    {
+        Debug.Log("OnStop_TestTask");
+    }
+
+    bool CanStop_TestTask()
+    {
+        Debug.Log("CanStop_TestTask");
+        return true;
+    }
+    
+
 }

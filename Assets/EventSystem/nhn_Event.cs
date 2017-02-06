@@ -14,10 +14,12 @@ namespace nhn_EventSystem {
         public string EventName;
         protected List<nhn_EventType> EventTypes = new List<nhn_EventType>();
         protected Dictionary<string, nhn_Delegate> delegates = new Dictionary<string, nhn_Delegate>();
+        protected nhn_EventHandler handler;
 
-        public nhn_Event(string name = "")
+        public nhn_Event(string name, nhn_EventHandler h)
         {
             EventName = name;
+            handler = h;
         }
 
         protected virtual void InitializeCallbacks()
@@ -31,7 +33,26 @@ namespace nhn_EventSystem {
             }
         }
 
-        public abstract void Register(object target, string methodName, string prefixName);
-        //Todo: Unregister function
+        public virtual void Register(object target, string methodName, string prefixName)
+        {
+            nhn_Delegate d = null;
+            delegates.TryGetValue(prefixName, out d);
+
+            if (d == null)
+                return;
+
+            //todo: Verify methods before adding, although it shouldn't cause any errors as is
+
+            d.AddMethod(target, methodName);
+        }
+
+        public virtual void UnRegister(object target)
+        {
+            foreach (nhn_Delegate d in delegates.Values)
+            {
+                d.RemoveMethodsFromObject(target);
+            }
+        }
+
     }
 }

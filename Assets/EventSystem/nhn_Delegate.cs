@@ -59,6 +59,36 @@ namespace nhn_EventSystem
                 MyEventCondition += (EventCondition)d;
             }
         }
+
+        public void RemoveMethodsFromObject(object o)
+        {
+            if (MyDelegateType == DelegateType.EventCallback)
+            {
+                List<Delegate> dels = new List<Delegate>(MyEventCallback.GetInvocationList());
+
+                if (dels == null || dels.Count == 0)
+                    return;
+
+                foreach (Delegate d in dels)
+                {
+                    if (d.Target == o)
+                        MyEventCallback -= (EventCallback)d;
+                }
+            }
+            else if (MyDelegateType == DelegateType.EventCondition)
+            {
+                List<Delegate> dels = new List<Delegate>(MyEventCondition.GetInvocationList());
+
+                if (dels == null || dels.Count == 0)
+                    return;
+
+                foreach (Delegate d in dels)
+                {
+                    if (d.Target == o)
+                        MyEventCondition -= (EventCondition)d;
+                }
+            }
+        }
     }
 
 }

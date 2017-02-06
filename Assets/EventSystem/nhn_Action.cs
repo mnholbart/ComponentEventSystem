@@ -11,27 +11,12 @@ namespace nhn_EventSystem
     /// </summary>
     public class nhn_Action : nhn_Event
     {
-        //List<nhn_Delegate> delegates = new List<nhn_Delegate>();
-
-        public nhn_Action(string name) : base(name)
+        public nhn_Action(string name, nhn_EventHandler h) : base(name, h)
         {
             EventTypes.Add(nhn_EventHandler.GetEventTypeFromName("OnStart"));
             EventTypes.Add(nhn_EventHandler.GetEventTypeFromName("OnFailStart"));
             EventTypes.Add(nhn_EventHandler.GetEventTypeFromName("CanStart"));
             InitializeCallbacks();
-        }
-
-        public override void Register(object target, string methodName, string prefixName)
-        {
-            nhn_Delegate d = null;
-            delegates.TryGetValue(prefixName, out d);
-
-            if (d == null)
-                return;
-
-            //todo: Verify methods before adding
-
-            d.AddMethod(target, methodName);
         }
 
         public virtual void TryStart()

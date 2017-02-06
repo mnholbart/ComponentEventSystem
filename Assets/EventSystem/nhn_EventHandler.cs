@@ -39,7 +39,10 @@ namespace nhn_EventSystem
         private Dictionary<string, nhn_Event> events = new Dictionary<string, nhn_Event>(); //All events this handler is tracking and initializing, created from child nhn_Event fields
         public static List<nhn_EventType> EventTypes = new List<nhn_EventType> { new nhn_EventType("OnStart", DelegateType.EventCallback),
                                                                                 new nhn_EventType("OnFailStart", DelegateType.EventCallback),
-                                                                                new nhn_EventType("CanStart", DelegateType.EventCondition) };
+                                                                                new nhn_EventType("OnStop", DelegateType.EventCallback),
+                                                                                new nhn_EventType("OnFailStop", DelegateType.EventCallback),
+                                                                                new nhn_EventType("CanStart", DelegateType.EventCondition),
+                                                                                new nhn_EventType("CanStop", DelegateType.EventCondition) };
 
         public static Dictionary<Type, nhn_ObjectMethodData> storedTypes = new Dictionary<Type, nhn_ObjectMethodData>(); //Cache of method info on types loaded
 
@@ -82,7 +85,7 @@ namespace nhn_EventSystem
 
             foreach (FieldInfo f in fields)
             {
-                e = Activator.CreateInstance(f.FieldType, f.Name);
+                e = Activator.CreateInstance(f.FieldType, f.Name, this);
                 if (e == null)
                     continue;
 
@@ -92,7 +95,7 @@ namespace nhn_EventSystem
                 {
                     string n = et.EventPrefix + "_" + f.Name;
                     if (!events.ContainsKey(n))
-                        events.Add(et.EventPrefix + "_" + f.Name, e as nhn_Event);
+                        events.Add(n, e as nhn_Event);
                 }
             }
         }
@@ -132,7 +135,22 @@ namespace nhn_EventSystem
             }
         }
 
-        //todo: public void Unregister(object o)
+        /// <summary>
+        /// Remove any methods assigned to events from object
+        /// </summary>
+        public void Unregister(object o)
+        {
+            if (o == null)
+                return;
+
+            foreach (nhn_Event e in events.Values)
+            {
+                if (e == null)
+                    return;
+
+                e.UnRegister(o);
+            }
+        }
 
         /// <summary>
         /// 
@@ -181,6 +199,40 @@ namespace nhn_EventSystem
         {
             nhn_EventType type = EventTypes.First(p => p.EventPrefix == prefixName);
             return type;
+        }
+
+
+        //Todo -- all this should probably be its own scheduling class rather than the event handler
+        public Dictionary<nhn_Event, IEnumerator> ScheduledCallbacks = new Dictionary<nhn_Event, IEnumerator>();
+        public void ScheduleCallback(nhn_Event e, float timer, Callback c)
+        {
+            if (ScheduledCallbacks.ContainsKey(e))
+                return;
+            IEnumerator co = CallbackTimer(timer, c, e);
+            StartCoroutine(co);
+            ScheduledCallbacks.Add(e, co);
+        }
+
+        public void CancelCallback(nhn_Event e)
+        {
+            IEnumerator co;
+            if (ScheduledCallbacks.TryGetValue(e, out co))
+            {
+                StopCoroutine(co);
+                ScheduledCallbacks.Remove(e);
+            } 
+        }
+
+        public delegate void Callback();
+        public IEnumerator CallbackTimer(float timer, Callback c, nhn_Event e)
+        {
+            while (timer > 0)
+            {
+                yield return null;
+                timer -= Time.deltaTime;
+            }
+            c.Invoke();
+            ScheduledCallbacks.Remove(e);
         }
     }
 }
